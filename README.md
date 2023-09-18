@@ -8,7 +8,6 @@ This is a Script that uses ffmpeg to generate a stripe preview of a given video.
 
 Usage
 ---
-<br></br>
 ```bash
 [Command]  /path/to/the/video.[extentions]
 
