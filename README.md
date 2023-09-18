@@ -8,7 +8,10 @@ ___
 
 ## Usage
 <br></br>
+```bash
 [Command]  /path/to/the/video.[extentions]
+
+```
 
 - [Command] is the path to the shell script file
 - 1st argument is the path to the video file
