@@ -1,7 +1,10 @@
 # Video Stripe Preview generator
 <br></br>
 This is a Script that uses ffmpeg to generate a stripe preview of a given video.
-<br></br><br></br>
+<br></br>
+
+---
+___
 
 ## Usage
 <br></br>
