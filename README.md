@@ -1,11 +1,13 @@
-# Video Stripe Preview generator
-<br></br>
+Video Stripe Preview generator
+===
+
 This is a Script that uses ffmpeg to generate a stripe preview of a given video.
 <br></br>
 
 
 
-## Usage
+Usage
+---
 <br></br>
 ```bash
 [Command]  /path/to/the/video.[extentions]
