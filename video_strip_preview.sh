@@ -12,7 +12,7 @@ SIZE=360
 BORDER=10
 PADDING=10
 COLUMN=4
-ROW=3
+ROW=6
 TOTAL_PREV=$((COLUMN * ROW))
 echo "Preview image count = $TOTAL_PREV"
 Tot_Frames="$(ffmpeg -i "$1" -map 0:v:0 -c:v copy -f null /dev/null 2>&1 | grep -oP 'frame=[\s]*\K\d+' | tail -n1)"
@@ -37,7 +37,8 @@ BOX_PROP=":box=1:boxcolor=black@0.5:boxborderw=5"
 FINAL_WIDTH=$(($COLUMN * $SIZE + $(($COLUMN - 1)) * $PADDING + $BORDER * 2 ))
 FINAL_HEIGHT=$(($COLUMN * $SIZE + $(($COLUMN - 1)) * $PADDING + $BORDER * 2 ))
 echo "Final Sample image width = $FINAL_WIDTH"
-TIT_FONT_SIZE=$(($(( W_Frame > H_Frame ? W_Frame : H_Frame ))/720 * 30))
+#TIT_FONT_SIZE=$(($(($(( FINAL_WIDTH > FINAL_HEIGHT ? FINAL_WIDTH : FINAL_HEIGHT ))/FINAL_WIDTH)) * 30))
+TIT_FONT_SIZE=$(($(($(( W_Frame > H_Frame ? W_Frame : H_Frame )) / $(( W_Frame < H_Frame ? W_Frame : H_Frame )) * $FINAL_WIDTH)) / 30))
 echo "Title Sample Font size = $TIT_FONT_SIZE"
 
 TIT_FONT_PROP=":fontcolor=white:fontsize=$TIT_FONT_SIZE"
