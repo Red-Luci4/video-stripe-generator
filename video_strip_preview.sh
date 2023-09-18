@@ -11,12 +11,22 @@ echo "title = $TITLE"
 SIZE=360
 BORDER=10
 PADDING=10
-COLUMN=4
+COLUMN=5
 ROW=6
 TOTAL_PREV=$((COLUMN * ROW))
 echo "Preview image count = $TOTAL_PREV"
 Tot_Frames="$(ffmpeg -i "$1" -map 0:v:0 -c:v copy -f null /dev/null 2>&1 | grep -oP 'frame=[\s]*\K\d+' | tail -n1)"
 echo "total no. of frames = $Tot_Frames"
+Encoding="$(ffprobe -v error -select_streams v:0 -show_entries stream=duration "$INPUT"|grep -zP "(?:<\!\[PROGRAM\]\n)(?<=\[STREAM\]\nduration=)[\. 0-9]+\n")"
+echo "Input File Encoding = $Encoding"
+Duration="$(ffprobe -v error -select_streams v:0 -show_entries stream=duration -of default=nokey=1:noprint_wrappers=1 "$INPUT")"
+Duration=${Duration%.*}
+echo "Video Duration = $Duration"
+Duration_F="$(($((${Duration%.*} / 3600)) % 24))\:$(($((${Duration%.*} / 60)) % 60))\:$((${Duration%.*} % 60))"
+echo "Formatted Video Duration = $Duration_F"
+#FRMS_TIME=$(ffprobe -v error -select_streams v:0 -show_entries program_stream=avg_frame_rate -of default=nokey=1:noprint_wrappers=1 "$INPUT")
+FPS=$(($(ffprobe -v error -select_streams v:0 -show_entries stream=avg_frame_rate -of default=nokey=1:noprint_wrappers=1 "$INPUT")))
+echo "Video FPS = $FPS"
 SKIP=$((Tot_Frames / TOTAL_PREV))
 echo "Frame Gap = $SKIP"
 W_Frame="$(ffprobe -v error -select_streams v:0 -show_entries stream=width -of default=nokey=1:noprint_wrappers=1 "$1")"
@@ -45,7 +55,7 @@ TIT_FONT_PROP=":fontcolor=white:fontsize=$TIT_FONT_SIZE"
 TIT_BOX_PROP=":box=1:boxcolor=black@0.5:boxborderw=5"
 
 
-TITLE_SPACE=200
+TITLE_SPACE=$(($(($(( W_Frame > H_Frame ? W_Frame : H_Frame )) / $(( W_Frame < H_Frame ? W_Frame : H_Frame )) * $FINAL_WIDTH)) / 5))
 #exit 0
 for (( i=0 ; i <= $ARGC ; i++ ))
 do
@@ -57,6 +67,9 @@ ffmpeg -i "$INPUT" -y -vframes 1 -q:v 2 -vf "select=not(mod(n\\,$SKIP)),\
                                                     scale=$SIZE:-1,\
                                                     tile=${COLUMN}x${ROW}:padding=$PADDING:margin=$BORDER:color=Black,\
                                                     pad=width=2+iw:height=2+ih+$TITLE_SPACE:x=1:y=1+$TITLE_SPACE:color=black,\
-                                                    drawtext=fontfile="$FONT":text='$TITLE'$TIT_FONT_PROP$TIT_BOX_PROP:x=50:y=50" \
+                                                    drawtext=fontfile="$FONT":text='Title - $TITLE'$TIT_FONT_PROP$TIT_BOX_PROP:x=20:y=20,\
+                                                    drawtext=fontfile="$FONT":text='Dimentions - ${H_Frame} x ${W_Frame} | FPS - ${FPS}'$TIT_FONT_PROP$TIT_BOX_PROP:x=20:y=20+$TIT_FONT_SIZE*1.5,\
+                                                    drawtext=fontfile="$FONT":text='Encoding - ${Encoding}'$TIT_FONT_PROP$TIT_BOX_PROP:x=20:y=20+$TIT_FONT_SIZE*3,\
+                                                    drawtext=fontfile="$FONT":text='Duration - ${Duration_F}'$TIT_FONT_PROP$TIT_BOX_PROP:x=20:y=20+$TIT_FONT_SIZE*4.5"\
                                                     "$OUTPUT"
 
