@@ -1,13 +1,10 @@
 # Video Stripe Preview generator
----
-
-
+<br></br>
 This is a Script that uses ffmpeg to generate a stripe preview of a given video.
-
+<br></br><br></br>
 
 ## Usage
----
-
+<br></br>
 [Command]  /path/to/the/video.[extentions]
 
 - [Command] is the path to the shell script file
