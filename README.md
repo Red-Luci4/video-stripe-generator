@@ -14,4 +14,4 @@ Usage
 ```
 
 - [Command] is the path to the shell script file
-- 1st argument is the path to the video file (Remember to use quotes of the name contains spaces)
+- 1st argument is the path to the video file (ATTENTION - If the name contains spaces wrap in double quots and dont use '\' to escape space)
