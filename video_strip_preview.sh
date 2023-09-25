@@ -120,7 +120,7 @@ while [[ $# -gt 0 ]]; do
 			shift 2
 			;;
         *)
-            echo "Unknown option: $1"
+            printf "\n\tUnknown option: $1 use the -h / --help Flag to print help Info\n\n"
             exit 1
             ;;
     esac
