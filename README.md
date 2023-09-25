@@ -38,10 +38,12 @@ Flag | Input | Description
 
 [**]: This Flag requires a mandatory Input.
 
+[~]: This Flag is Optional.
+
 > [!IMPORTANT]
 > If Name has [Space], then wrap it in Double Quotes -> "Name"
 
-[~]: This Flag is Optional.
+---
 
 <details>
 
