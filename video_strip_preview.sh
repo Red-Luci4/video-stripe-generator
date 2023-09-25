@@ -2,15 +2,17 @@
 
 Help_Func(){
 printf "\t%s\n\n" "This is script to generate Video Stripe Preview generator"
-printf "\tUsage : \v video-stripe-preview [Flag] [Input]\n\n\n"
+printf "\tUsage : \v video-stripe-preview [Flag Input]...\n\n\n"
 printf "%15s%5c%10s%5c%15s\n\n" "Flag" "|" "Input" "|" "Discription"
-printf "%17s%16s\t%s\n\n" "-h/--help" 		"N/A" 			"This flag will print this output to show how to use the script"
-printf "%17s%16s\t%s\n\n" "-vf/--video_file" "Input File" 	"This flag will take <String>Input of the Video File location"
-printf "%17s%16s\t%s\n\n" "-l/--length" 	"Final Preview Width" 	"This flag will take <Intiger>Input of the approximate width in pixels of the final preview image"
-printf "%17s%16s\t%s\n\n" "-b/--border" 	"Border size" 	"This flag will take <Intiger>Input of border size in pixels of the final tiled preview"
-printf "%17s%16s\t%s\n\n" "-p/--padding" 	"Padding Size" 	"This flag will take <Intiger>Input of padding size in pixels of the final tiled preview"
-printf "%17s%16s\t%s\n\n" "-c/--column" 	"No of Columns" "This flag will take <Intiger>Input of number of columns of tiles in the final preview Minimum Value = 1"
-printf "%17s%16s\t%s\n\n" "-r/--row" 		"No of Rows" 	"This flag will take <Intiger>Input of number of rows of tiles in the final preview Minimum Value = 1"
+printf "%17s%16s\t%s\n\n" "-h/--help" 			"N/A" 					"This flag will print this Help Information"
+printf "%17s%16s\t%s\n\n" "-el/--error_log"		"N/A" 					"This flag will make ffmpeg log everything to stderr"
+printf "%17s%16s\t%s\n\n" "-ew/--error_write"	"N/A" 					"This flag will write FFmpegs stderr to \"ffmpeg_error.log\" in Current Working Directory"
+printf "%17s%16s\t%s\n\n" "-vf/--video_file" 	"Input File" 			"This flag will take <String>Input of the Video File location"
+printf "%17s%16s\t%s\n\n" "-l/--length" 		"Preview Width" 		"This flag will take <Intiger>Input of the approximate width in pixels of the final preview image"
+printf "%17s%16s\t%s\n\n" "-b/--border" 		"Border size" 			"This flag will take <Intiger>Input of border size in pixels of the final tiled preview"
+printf "%17s%16s\t%s\n\n" "-p/--padding" 		"Padding Size" 			"This flag will take <Intiger>Input of padding size in pixels of the final tiled preview"
+printf "%17s%16s\t%s\n\n" "-c/--column" 		"No of Columns" 		"This flag will take <Intiger>Input of number of columns of tiles in the final preview Minimum Value = 1"
+printf "%17s%16s\t%s\n\n" "-r/--row" 			"No of Rows" 			"This flag will take <Intiger>Input of number of rows of tiles in the final preview Minimum Value = 1"
 }
 
 Cache_Error(){
@@ -30,6 +32,10 @@ COLUMN=3
 ROW=2
 #SIZE=372
 INPUT=""
+
+
+ffmpeg_log_flag=""
+ffmpeg_log_output=""
 
 
 while [[ $# -gt 0 ]]; do
@@ -65,6 +71,16 @@ while [[ $# -gt 0 ]]; do
 		-h|--help)
 			Help_Func
 			exit 0
+			;;
+		-el|--error_log)
+			ffmpeg_log_flag="-loglevel error -v 99"
+			printf "\n\tFFmpeg will show all stderr\n\n"
+			shift 1
+			;;
+		-ew|--error_write)
+			ffmpeg_log_output="ffmpeg_error.log"
+			printf "\n\tWritting FFmpeg Error log to : $ffmpeg_log_output\n\n"
+			shift 1
 			;;
 		-l|--length)
 			LENGTH=$2
@@ -129,11 +145,13 @@ echo "title = $TITLE"
 
 TITLE_SAN=$(echo $TITLE|\
 			sed -E 's~[^a-z^A-Z^0-9^\.^ ^\-^_]~~g')
+
 SIZE=$(($(($((LENGTH-BORDER*2)) - $(($((COLUMN - 1)) * PADDING)))) / COLUMN))
 echo "Reverse Calculated Size = $SIZE"
 
 TOTAL_PREV=$((COLUMN * ROW))
 echo "Preview image count = $TOTAL_PREV"
+
 Tot_Frames="$(ffmpeg -i "$INPUT" -map 0:v:0 -c:v copy -f null /dev/null 2>&1 |\
 				grep -oP 'frame=[\s]*\K\d+' |\
 				tail -n1)"
@@ -215,9 +233,10 @@ echo "Final Echo"
 done
 #exit 0
 
-ffmpeg -loglevel error -v 99 -i "$INPUT" -y -vframes 1 -q:v 2 -vf \
+if [[ -z $ffmpeg_log_output ]];then
+ffmpeg $ffmpeg_log_flag -i "$INPUT" -y -vframes 1 -q:v 2 -vf \
 	"select=not(mod(n\\,$SKIP)),\
-	drawtext=fontfile="$FONT":text='$TIME'$FONT_PROP$BOX_PROP:x=($W_Frame-text_w)-10:y=($H_Frame-text_h)-10,\
+	drawtext=fontfile=$FONT:text='$TIME'$FONT_PROP$BOX_PROP:x=($W_Frame-text_w)-10:y=($H_Frame-text_h)-10,\
 	scale=$SIZE:-1,\
 	tile=${COLUMN}x${ROW}:padding=$PADDING:margin=$BORDER:color=Black,\
 	pad=width=2+iw:height=2+ih+$TITLE_SPACE:x=1:y=1+$TITLE_SPACE:color=black,\
@@ -226,3 +245,16 @@ ffmpeg -loglevel error -v 99 -i "$INPUT" -y -vframes 1 -q:v 2 -vf \
 	drawtext=fontfile=$FONT:text='Encoding - ${Encoding}'$TIT_FONT_PROP$TIT_BOX_PROP:x=20:y=20+$TIT_FONT_SIZE*3,\
 	drawtext=fontfile=$FONT:text='Duration - ${Duration_F}'$TIT_FONT_PROP$TIT_BOX_PROP:x=20:y=20+$TIT_FONT_SIZE*4.5"\
 	"$OUTPUT" 2>&1
+else 
+	ffmpeg $ffmpeg_log_flag -i "$INPUT" -y -vframes 1 -q:v 2 -vf \
+	"select=not(mod(n\\,$SKIP)),\
+	drawtext=fontfile=$FONT:text='$TIME'$FONT_PROP$BOX_PROP:x=($W_Frame-text_w)-10:y=($H_Frame-text_h)-10,\
+	scale=$SIZE:-1,\
+	tile=${COLUMN}x${ROW}:padding=$PADDING:margin=$BORDER:color=Black,\
+	pad=width=2+iw:height=2+ih+$TITLE_SPACE:x=1:y=1+$TITLE_SPACE:color=black,\
+	drawtext=fontfile=$FONT:text='Title - ${TITLE_SAN}'$TIT_FONT_PROP$TIT_BOX_PROP:x=20:y=20,\
+	drawtext=fontfile=$FONT:text='Dimentions - ${H_Frame} x ${W_Frame} | FPS - ${FPS}'$TIT_FONT_PROP$TIT_BOX_PROP:x=20:y=20+$TIT_FONT_SIZE*1.5,\
+	drawtext=fontfile=$FONT:text='Encoding - ${Encoding}'$TIT_FONT_PROP$TIT_BOX_PROP:x=20:y=20+$TIT_FONT_SIZE*3,\
+	drawtext=fontfile=$FONT:text='Duration - ${Duration_F}'$TIT_FONT_PROP$TIT_BOX_PROP:x=20:y=20+$TIT_FONT_SIZE*4.5"\
+	"$OUTPUT" 2>$ffmpeg_log_output
+fi
