@@ -8,13 +8,13 @@ This is a Script that uses ffmpeg to generate a stripe preview of a given video.
 Usage
 ---
 ```bash
-video_strip_preview.sh -Flag "Input"
+video_strip_preview.sh [ -Flag "Input" ]...
 
 ```
 
 - First Argument is the path to the shell script file
 - Second argument is the Flag
-- Third Argument is the Input for the Flag (ATTENTION - If the name contains spaces, wrap in double quots and don't use '\' to escape space)
+- Third Argument is the Input for the Flag
 
 <br></br>
 
@@ -25,6 +25,8 @@ Flag, Input, and Description Table
 Flag | Input | Description
 ---|---|---
 `-h`<br> `--help`| [N/A] | This Flag will print out the useful info about this script
+`-el`<br> `--error_log`| [N/A] | This Flag will make ffmpeg log everything to stderr
+`-ew`<br> `--error_write`| [N/A] | This Flag will write FFmpegs stderr to ffmpeg_error.log in Current Working Directory
 `-vf`<br>`--video_file`| Input File [**] | This flag will take \<String\> Input of the Video File location<br><b>NOTE: If Name has [Space], then wrap it in Double Quotes -> "Name"</b>
 `-l`<br>`--lenght`| Final Preview Width [~] | This flag will take \<Integer\> Input of the approximate width in pixels of the final preview image
 `-b`<br>`--border`| Border Size [~] | This flag will take \<Integer\> Input of border size in pixels of the final tiled preview
