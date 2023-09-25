@@ -38,7 +38,7 @@ Flag | Input | Description
 
 [**]: This Flag requires a mandatory Input.
 
-> [!NOTE]
+> [!IMPORTANT]
 > If Name has [Space], then wrap it in Double Quotes -> "Name"
 
 [~]: This Flag is Optional.
@@ -65,6 +65,6 @@ Requiremets
 - tail
 - tr
 
-> [!INFO]
+> [!NOTE]
 > Probably the Only additional package you'll need is FFmpeg, but better be safe that sorry
 </details>
