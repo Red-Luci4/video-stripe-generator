@@ -27,7 +27,7 @@ Flag | Input | Description
 `-h`<br> `--help`| [N/A] | This Flag will print out the useful info about this script
 `-el`<br> `--error_log`| [N/A] | This Flag will make ffmpeg log everything to stderr
 `-ew`<br> `--error_write`| [N/A] | This Flag will write FFmpegs stderr to ffmpeg_error.log in Current Working Directory
-`-vf`<br>`--video_file`| Input File [**] | This flag will take \<String\> Input of the Video File location<br><b>NOTE: If Name has [Space], then wrap it in Double Quotes -> "Name"</b>
+`-vf`<br>`--video_file`| Input File [**] | This flag will take \<String\> Input of the Video File location
 `-l`<br>`--lenght`| Final Preview Width [~] | This flag will take \<Integer\> Input of the approximate width in pixels of the final preview image
 `-b`<br>`--border`| Border Size [~] | This flag will take \<Integer\> Input of border size in pixels of the final tiled preview
 `-p`<br>`--padding`| Padding Size [~] | This flag will take \<Integer\> Input of padding size in pixels of the final tiled preview
@@ -38,8 +38,14 @@ Flag | Input | Description
 
 [**]: This Flag requires a mandatory Input.
 
+> [!NOTE]
+> If Name has [Space], then wrap it in Double Quotes -> "Name"
+
 [~]: This Flag is Optional.
 
+<details>
+
+<summary>Requirements</summary>
 
 Requiremets
 ---
@@ -58,3 +64,7 @@ Requiremets
 - sed
 - tail
 - tr
+
+> [!INFO]
+> Probably the Only additional package you'll need is FFmpeg, but better be safe that sorry
+</details>
