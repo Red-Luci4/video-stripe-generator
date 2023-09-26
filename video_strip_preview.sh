@@ -146,7 +146,14 @@ echo "title = $TITLE"
 TITLE_SAN=$(echo $TITLE|\
 			sed -E 's~[^a-z^A-Z^0-9^\.^ ^\-^_]~~g')
 
-SIZE=$(($(($((LENGTH-BORDER*2)) - $(($((COLUMN - 1)) * PADDING)))) / COLUMN))
+SIZE=$((
+		(
+		(LENGTH-BORDER*2)-
+		(
+		(COLUMN - 1) * PADDING
+		)
+		) / COLUMN
+	))
 echo "Reverse Calculated Size = $SIZE"
 
 TOTAL_PREV=$((COLUMN * ROW))
@@ -169,10 +176,15 @@ Duration="$(ffprobe -v error -select_streams v:0 -show_entries stream=duration "
 
 
 Duration=${Duration%.*}
-echo "Video Duration = $Duration"
+echo "Video Duration = $Duration s"
 
-Duration_F="$(($((${Duration%.*} / 3600)) % 24))\:$(($((${Duration%.*} / 60)) % 60))\:$((${Duration%.*} % 60))"
-echo "Formatted Video Duration = $Duration_F"
+HRS=$(( ($Duration / 3600) % 24))
+MNS=$(( ($Duration / 60) % 60))
+SEC=$(($Duration % 60))
+
+#Duration_F="$(($((${Duration%.*} / 3600)) % 24))\:$(($((${Duration%.*} / 60)) % 60))\:$((${Duration%.*} % 60))"
+Duration_F=$(printf "%02d\:%02d\:%02d" "$HRS" "$MNS" "$SEC")
+printf "Formatted Video Duration = %02d:%02d:%02d\n" "$HRS" "$MNS" "$SEC"
 
 #FRMS_TIME=$(ffprobe -v error -select_streams v:0 -show_entries program_stream=avg_frame_rate -of default=nokey=1:noprint_wrappers=1 "$INPUT")
 
@@ -212,12 +224,27 @@ echo "Font properties = $FONT_PROP"
 
 BOX_PROP=":box=1:boxcolor=black@0.5:boxborderw=5"
 
-FINAL_WIDTH=$(($COLUMN * $SIZE + $(($COLUMN - 1)) * $PADDING + $BORDER * 2 ))
-FINAL_HEIGHT=$(($COLUMN * $SIZE + $(($COLUMN - 1)) * $PADDING + $BORDER * 2 ))
+FINAL_WIDTH=$((
+			$COLUMN * $SIZE + 
+			($COLUMN - 1) * $PADDING +
+			$BORDER * 2
+			))
+FINAL_HEIGHT=$((
+			$COLUMN * $SIZE +
+			($COLUMN - 1) * $PADDING +
+			$BORDER * 2
+			))
 echo "Final Sample image width = $FINAL_WIDTH"
 
 #TIT_FONT_SIZE=$(($(($(( FINAL_WIDTH > FINAL_HEIGHT ? FINAL_WIDTH : FINAL_HEIGHT ))/FINAL_WIDTH)) * 30))
-TIT_FONT_SIZE=$(($(($(( W_Frame > H_Frame ? W_Frame : H_Frame )) / $(( W_Frame < H_Frame ? W_Frame : H_Frame )) * $FINAL_WIDTH)) / 30))
+TIT_FONT_SIZE=$((
+				(
+				( W_Frame > H_Frame ? W_Frame : H_Frame )/
+				( W_Frame < H_Frame ? W_Frame : H_Frame )
+				*$FINAL_WIDTH
+				)
+				/30
+				))
 echo "Title Sample Font size = $TIT_FONT_SIZE"
 
 TIT_FONT_PROP=":fontcolor=white:fontsize=$TIT_FONT_SIZE"
@@ -225,7 +252,13 @@ TIT_BOX_PROP=":box=1:boxcolor=black@0.5:boxborderw=5"
 
 
 #TITLE_SPACE=$(($(($(( W_Frame > H_Frame ? W_Frame : H_Frame )) / $(( W_Frame < H_Frame ? W_Frame : H_Frame )) * $FINAL_WIDTH)) / 5))
-TITLE_SPACE=$(($(($(( FINAL_WIDTH > FINAL_HEIGHT ? FINAL_WIDTH : FINAL_HEIGHT )) / $(( FINAL_WIDTH < FINAL_HEIGHT ? FINAL_WIDTH : FINAL_HEIGHT )) * $FINAL_WIDTH)) / 5))
+TITLE_SPACE=$((
+				(
+				( FINAL_WIDTH > FINAL_HEIGHT ? FINAL_WIDTH : FINAL_HEIGHT )/
+				( FINAL_WIDTH < FINAL_HEIGHT ? FINAL_WIDTH : FINAL_HEIGHT )*
+				$FINAL_WIDTH
+				)/ 5
+			))
 #exit 0
 for (( i=0 ; i <= $ARGC ; i++ ))
 do
