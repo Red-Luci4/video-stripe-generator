@@ -45,7 +45,6 @@ probe() {
 					-loglevel error
 					-print_format flat
 					-count_packets
-					# -count_frames # expensive, matches packet count
 					-select_streams v
 					-show_streams
 					-show_format
@@ -78,9 +77,8 @@ while [[ $# -gt 0 ]]; do
             if [[ -f "$2" && -z $INPUT ]];then
 				INPUT="$2"
 				if [[ -s "$2" ]];then
-					probe "$2"
-					#VID_CHK=$(ffprobe -v error -select_streams v:0 -count_packets -show_entries stream=nb_read_packets "$2"|grep -ozP '(?<![\[]PROGRAM[\]]\n)[\[]STREAM[\]]\nnb_read_packets=\K[\d]+\n'|tr -d '\0')
-					VID_CHK=$(get_value $FRAMES_KEY)
+					probe "$2" # First "probe" to get and store data about file
+					VID_CHK=$(get_value $FRAMES_KEY) # Get Frames value from the stored data
 					if [[ $VID_CHK -gt 1 ]];then
 						printf "The Input file is a valid video file\n"
 					elif [[ $VID_CHK -eq 1 ]];then
@@ -190,18 +188,13 @@ echo "Reverse Calculated Size = $SIZE"
 TOTAL_PREV=$((COLUMN * ROW))
 echo "Preview image count = $TOTAL_PREV"
 
-#Tot_Frames="$(ffmpeg -i "$INPUT" -map 0:v:0 -c:v copy -f null /dev/null 2>&1 |grep -oP 'frame=[\s]*\K\d+' |tail -n1)"
 Tot_Frames="$(get_value $FRAMES_KEY)"
 echo "total no. of frames = $Tot_Frames"
 
-
-#Encoding="$(ffprobe -v error -select_streams v:0 -show_entries stream=codec_long_name "$INPUT"|grep -ozP '(?<![\[]PROGRAM[\]]\n)[\[]STREAM[\]]\ncodec_long_name=\K[^\n]+\n'|tr -d '\0')"
 Encoding="$(get_value $ENCODING_KEY)"
 echo "Input File Encoding = $Encoding"
 
-#Duration="$(ffprobe -v error -select_streams v:0 -show_entries stream=duration "$INPUT"|grep -ozP '(?<![\[]PROGRAM[\]]\n)[\[]STREAM[\]]\nduration=\K[\d \.]+\n'|tr -d '\0')"
 Duration="$(get_value $DURATION_KEY)"
-
 Duration=${Duration%.*}
 echo "Video Duration = $Duration s"
 
@@ -209,14 +202,11 @@ HRS=$(( ($Duration / 3600) % 24))
 MNS=$(( ($Duration / 60) % 60))
 SEC=$(($Duration % 60))
 
-#Duration_F="$(($((${Duration%.*} / 3600)) % 24))\:$(($((${Duration%.*} / 60)) % 60))\:$((${Duration%.*} % 60))"
 Duration_F=$(printf "%02d\:%02d\:%02d"\
 					"$HRS" "$MNS" "$SEC")
 printf "Formatted Video Duration = %02d:%02d:%02d\n"\
 								"$HRS" "$MNS" "$SEC"
 
-
-#FPS="$(ffprobe -v error -select_streams v:0 -show_entries stream=avg_frame_rate "$INPUT"|grep  -ozP '(?<![\[]PROGRAM[\]]\n)[\[]STREAM[\]]\navg_frame_rate=\K[\d \. \/]+\n'|tr -d '\0')"
 FPS="$(get_value $FPS_KEY)"
 FPS=$(($FPS))
 
@@ -228,18 +218,15 @@ SKIP=1
 fi
 echo "Frame Gap = $SKIP"
 
-#W_Frame="$(ffprobe -v error -select_streams v:0 -show_entries stream=width "$INPUT"|grep  -ozP '(?<![\[]PROGRAM[\]]\n)[\[]STREAM[\]]\nwidth=\K[\d]+\n'|tr -d '\0')"
 W_Frame="$(get_value $WIDTH_KEY)"
 echo "width of video = $W_Frame"
 
-#H_Frame="$(ffprobe -v error -select_streams v:0 -show_entries stream=height "$INPUT"|grep  -ozP '(?<![\[]PROGRAM[\]]\n)[\[]STREAM[\]]\nheight=\K[\d]+\n'|tr -d '\0')"
 H_Frame="$(get_value $HEIGHT_KEY)"
 echo "height of video = $H_Frame"
 
 FONT="/usr/share/fonts/TTF/OpenSans-Regular.ttf"
 TIME="%{eif\:t/3600\:d\:2}\:%{eif\:mod(t/60\,60)\:d\:2}\:%{eif\:mod(t\,60)\:d\:2}\.%{eif\:100*mod(t\,1)\:d\:2}"
 
-#TIME_FONT_SIZE=$((W_Frame/1280 * 48))
 TIME_FONT_SIZE=$((
 				( W_Frame > H_Frame ? W_Frame : H_Frame )/640 * 48
 				))
@@ -262,7 +249,6 @@ FINAL_HEIGHT=$((
 			))
 echo "Final Sample image width = $FINAL_WIDTH"
 
-#TIT_FONT_SIZE=$(($(($(( FINAL_WIDTH > FINAL_HEIGHT ? FINAL_WIDTH : FINAL_HEIGHT ))/FINAL_WIDTH)) * 30))
 TIT_FONT_SIZE=$((
 				(
 				( W_Frame > H_Frame ? W_Frame : H_Frame )/
@@ -276,8 +262,6 @@ echo "Title Sample Font size = $TIT_FONT_SIZE"
 TIT_FONT_PROP=":fontcolor=white:fontsize=$TIT_FONT_SIZE"
 TIT_BOX_PROP=":box=1:boxcolor=black@0.5:boxborderw=5"
 
-
-#TITLE_SPACE=$(($(($(( W_Frame > H_Frame ? W_Frame : H_Frame )) / $(( W_Frame < H_Frame ? W_Frame : H_Frame )) * $FINAL_WIDTH)) / 5))
 TITLE_SPACE=$((
 				(
 				( FINAL_WIDTH > FINAL_HEIGHT ? FINAL_WIDTH : FINAL_HEIGHT )/
@@ -286,10 +270,6 @@ TITLE_SPACE=$((
 				)/ 5
 			))
 
-for (( i=0 ; i <= $ARGC ; i++ ))
-do
-echo "Final Echo"
-done
 #exit 0
 
 if [[ -z $ffmpeg_log_output ]];then
