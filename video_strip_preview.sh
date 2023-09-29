@@ -50,6 +50,7 @@ Flag_Disc "-sr/--safe_run"     "N/A"           "This flag will Quit the Script r
 Flag_Disc "-dr/--dry_run"      "N/A"           "This flag will Run the FFmpeg but outputs no data \"-f null /dev/null\""
 Flag_Disc "-el/--error_log"    "N/A"           "This flag will make ffmpeg log everything to stderr"
 Flag_Disc "-ew/--error_write"  "N/A"           "This flag will write FFmpegs stderr to \"ffmpeg_error.log\" in Current Working Directory"
+Flag_Disc "-q/--quiet"         "N/A"           "This flag will Disable printing Report to stdout "
 Flag_Disc "-vf/--video_file"   "Input File"    "This flag will take <String>Input of the Video File location"
 Flag_Disc "-l/--length"        "Preview Width" "This flag will take <Intiger>Input of the approximate width in pixels of the final preview image"
 Flag_Disc "-b/--border"        "Border size"   "This flag will take <Intiger>Input of border size in pixels of the final tiled preview"
@@ -94,7 +95,7 @@ Backup_Exist_Log(){
 	if [[ -e $V_ffmpeg_log_output || -L $V_ffmpeg_log_output ]];then
 		i=0
 		while [[ -e "$(printf "%04d" $i)-$V_ffmpeg_log_output" || -L "$(printf "%04d" $i)-$V_ffmpeg_log_output"  ]];do
-			let i++
+			i=$(( i + 1 ))
 		done
 		mv $V_ffmpeg_log_output "$(printf "%04d" $i)-$V_ffmpeg_log_output"
 	fi
@@ -427,12 +428,15 @@ if [[ $B_quiet != "true" ]];then
 printf "\nThe Process Report :\n\n$L_Report_List\n"
 fi
 
+if [[ $V_REDIR != '2>&1' ]];then
 printf "\nThe Process Report :\n\n$L_Report_List\n">$V_ffmpeg_log_output
+fi
 
 # Exit with 0 if  Safe Run is enables
 if [[ $B_safe_run == "true" ]];then
 exit 0
 fi
+
 ####ANCHOR - Final FFmpeg step
 eval "ffmpeg -hide_banner $V_ffmpeg_log_flag -i \"$V_INPUT\" -y -vframes 1 -q:v 2 -vf \
 	\"select=not(mod(n\\,$SKIP)),\
