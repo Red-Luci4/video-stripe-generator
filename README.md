@@ -25,8 +25,11 @@ Flag, Input, and Description Table
 Flag | Input | Description
 ---|---|---
 `-h`<br> `--help`| [N/A] | This Flag will print out the useful info about this script
+`-sr`<br> `--safe_run`| [N/A] | This flag will Quit the Script right before FFmpeg command (-dr -el -ew wont work with this)
+`-dr`<br> `--dry_run`| [N/A] | This flag will Run the FFmpeg but outputs no data "-f null /dev/null"
 `-el`<br> `--error_log`| [N/A] | This Flag will make ffmpeg log everything to stderr
 `-ew`<br> `--error_write`| [N/A] | This Flag will write FFmpegs stderr to ffmpeg_error.log in Current Working Directory
+`-q`<br> `--quiet`| [N/A] | This Flag will print out the useful info about this script
 `-vf`<br>`--video_file`| Input File [**] | This flag will take \<String\> Input of the Video File location
 `-l`<br>`--lenght`| Final Preview Width [~] | This flag will take \<Integer\> Input of the approximate width in pixels of the final preview image
 `-b`<br>`--border`| Border Size [~] | This flag will take \<Integer\> Input of border size in pixels of the final tiled preview
@@ -66,6 +69,9 @@ Requiremets
 - sed
 - tail
 - tr
+- eval
+- pwd
+- readlink
 
 > [!NOTE]
 > Probably the Only additional package you'll need is FFmpeg, but better be safe that sorry
