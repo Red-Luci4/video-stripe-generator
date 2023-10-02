@@ -80,7 +80,7 @@ Emg_Exit(){
 }
 
 Cache_Error(){
-L_Error_List="$L_Error_List$(printf "$1")\n"
+L_Error_List="$L_Error_List$(printf "$1")\n\n"
 }
 
 Cache_Report(){
@@ -154,17 +154,17 @@ while [[ $# -gt 0 ]]; do
 						Cache_Report "\tInput file = '$(basename "$2")'\n\tThe Input file is a valid video file\n"
 						Cache_Report "\tFile Location = \"$(readlink -f "$2")\"\n"
 					elif [[ $VID_CHK -eq 1 ]];then # Cache Error if Input File is a Image File
-						Cache_Error "\n\t Input file = $2\n\tError  :  The Input file is a image file with single frame\n"
+						Cache_Error "\n\t Input file = $2\n\tError  :  The Input file is a image file with single frame\n\n"
 					else # Ceche Error if Input File is of Unknown Data
-						Cache_Error "\n\t Input file = $2\n\tError  :  Input file is of unknown Data/Format\n"
+						Cache_Error "\n\t Input file = $2\n\tError  :  Input file is of unknown Data/Format\n\n"
 					fi
 				else # Cache Error if Input File is a Empty File
-					Cache_Error "\n\t Input file = $2\n\tError  :  The Input File is empty file\n"
+					Cache_Error "\n\t Input file = $2\n\tError  :  The Input File is empty file\n\n"
 				fi
 			elif [[ ! -z $V_INPUT ]];then # Cache Error if trying to Provide multiple Input File
-				Cache_Error "\n\t Input file = $2\n\tError  :  The Input File already provided \n"
+				Cache_Error "\n\t Input file = $2\n\tError  :  The Input File already provided \n\n"
 			else  # Cache Error if Input File in not a Regular File
-				Cache_Error "\n\t Input file = $2\n\tError  :  The Input File is not a regular file\n"
+				Cache_Error "\n\t Input file = $2\n\tError  :  The Input File is not a regular file\n\n"
 				V_INPUT="--Irregular File-- $2"
 			fi
 			shift 2
@@ -206,10 +206,8 @@ while [[ $# -gt 0 ]]; do
 			;;
 
 		-l|--length)
-			if [[ "$2" =~ [^0-9]+ ]];then
+			if [[ "$2" =~ [-]{0,1}[^0-9^-]+ ]];then
 				Cache_Error "\tLength = $2 is not a Number\n"
-			elif [[ $2 -lt 0 ]];then # Cache Error if Length is Negative
-				Cache_Error "\n\t Length = $2\n\tError  :  Length cannot be a Negative Number Minimum Length is 540 \n"
 			elif [[ $2 -lt 540 ]];then # Cache Error if Length Less that 540 pixels
 				Cache_Error "\n\t Length = $2\n\tError  :  Minimum Length is 540 \n"
 			else
@@ -219,10 +217,10 @@ while [[ $# -gt 0 ]]; do
 			;;
 
 		-b|--border)
-			if [[ "$2" =~ [^0-9]+ ]];then
-				Cache_Error "\tBorder = $2 is not a Number\n"
+			if [[ "$2" =~ [-]{0,1}[^0-9^-]+ ]];then
+				Cache_Error "\tBorder = $2\n\tError  :  not a Number\n"
 			elif [[ $2 -lt 0 ]];then # Cache Error if Border is Negative
-				Cache_Error "\n\t Border = $2\n\tError  :  Border cannot be a Negative Number Minimum Length is 0 \n"
+				Cache_Error "\n\t Border = $2\n\tError  :  Border Minimum Length is 0 \n"
 			else
 				V_BORDER=$2
 			fi
@@ -230,10 +228,10 @@ while [[ $# -gt 0 ]]; do
 			;;
 
 		-p|--padding)
-			if [[ "$2" =~ [^0-9]+ ]];then
-				Cache_Error "\tPadding = $2 is not a Number\n"
+			if [[ "$2" =~ [-]{0,1}[^0-9^-]+ ]];then
+				Cache_Error "\tPadding = $2\n\tError  :  not a Number\n"
 			elif [[ $2 -lt 0 ]];then # Cache Error if Padding is Negative
-				Cache_Error "\n\t Padding = $2\n\tError  :  Padding cannot be a Negative Number Minimum Length is 0 \n"
+				Cache_Error "\n\t Padding = $2\n\tError  :  Padding Minimum Length is 0 \n"
 			else
 				V_PADDING=$2
 			fi
@@ -241,9 +239,9 @@ while [[ $# -gt 0 ]]; do
 			;;
 
 		-r|--row)
-			if [[ "$2" =~ [^0-9]+ ]];then
-				Cache_Error "\tRow = $2 is not a Number\n"
-			elif [[ $V_ROW -lt 1 ]];then # Cache Error if Row Less that 1
+			if [[ "$2" =~ [-]{0,1}[^0-9^-]+ ]];then
+				Cache_Error "\tRow = $2\n\tError  :  not a Number\n"
+			elif [[ $2 -lt 1 ]];then # Cache Error if Row Less that 1
 				Cache_Error "\n\t Row = $2\n\tError  :  Minimum Row is 1 \n"
 			else
 				V_ROW=$2
@@ -252,9 +250,9 @@ while [[ $# -gt 0 ]]; do
 			;;
 
 		-c|--column)
-			if [[ "$2" =~ [^0-9]+ ]];then
-				Cache_Error "\tColumn = $2 is not a Number\n"
-			elif [[ $V_COLUMN -lt 1 ]];then # Cache Error if Column Less that 1
+			if [[ "$2" =~ [-]{0,1}[^0-9^-]+ ]];then
+				Cache_Error "\tColumn = $2\n\tError  :  not a Number\n"
+			elif [[ $2 -lt 1 ]];then # Cache Error if Column Less that 1
 				Cache_Error "\n\t Column = $2\n\tError  :  Minimum Column is 1 \n"
 			else
 				V_COLUMN=$2
@@ -275,7 +273,7 @@ Cache_Error "\n\t Input file = [NULL]\n\tError  :  The Input File is not provide
 fi
 
 if [[ ! -z $L_Error_List ]];then # If error exists then printf Error and Exit 1
-printf "\n\tThe following errors have been detected :\n\n$L_Error_List\n"
+printf "\n\tThe following errors have been detected :\n\n$L_Error_List\n" 1>&2
 exit 1
 fi
 ####!JOB
@@ -425,7 +423,7 @@ fi
 
 # Disable Printing Report if Quiet is enabled
 if [[ $B_quiet != "true" ]];then
-printf "\nThe Process Report :\n\n$L_Report_List\n"
+printf "\nThe Process Report :\n\n$L_Report_List\n\n"
 fi
 
 if [[ $V_REDIR != '2>&1' ]];then
