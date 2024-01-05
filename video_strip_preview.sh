@@ -2,44 +2,73 @@
 
 ####INIT - Constants, Variables, Empty initialization
 
+## Init Constants for get_value function
+
+#Height Key Constant
 readonly C_HEIGHT_KEY="streams.stream.0.height"
+#Width Key Constant
 readonly C_WIDTH_KEY="streams.stream.0.width"
+#Frame Key Constant
 readonly C_FRAMES_KEY="streams.stream.0.nb_read_packets"
+#FPS Key Constant
 readonly C_FPS_KEY="streams.stream.0.avg_frame_rate"
+#Video Duration Key Constant
 readonly C_DURATION_KEY="format.duration"
+#Video Data Codec Key Constant
 readonly C_ENCODING_KEY="streams.stream.0.codec_long_name"
 
-readonly C_ARGV=("$@")
-readonly C_ARGC=$#
+#readonly C_ARGV=("$@")
+#readonly C_ARGC=$#
 
-L_Error_List=""
-L_Report_List=""
+## Init Default Variables
 
+#Preview Font Value
 V_FONT="/usr/share/fonts/TTF/OpenSans-Regular.ttf"
-V_FORMAT='mjpeg'
+#Preview Output Format
+V_FORMAT='apng'
+#FFmpeg Error stream Redirect
 V_REDIR='2>&1'
+#Preview Length
 V_LENGTH=720
 #V_SIZE=360
+
+#Preview Border Length
 V_BORDER=10
+#Preview Padding Length
 V_PADDING=10
+#Preview Column Number
 V_COLUMN=3
+#Preview Row Number
 V_ROW=2
+#Input File Name
 V_INPUT=""
+#Flag to increase FFmpeg Verbosity
 V_ffmpeg_log_flag=""
+#Log File Name
 V_ffmpeg_log_output="ffmpeg_error.log"
 
+## Init Empty Variables
+
+#Error List
+L_Error_List=""
+#Report List
+L_Report_List=""
+#Dry Run Bool
 B_dry_run=""
+#Safe Run Bool
 B_safe_run=""
+#Quiet Run Bool
 B_quiet=""
 
 ####!INIT
 
 ####INIT - Function initialization
 
+# Used by Help_Func to discribe to print Flags and Discription
 Flag_Disc(){
 printf "%17s%16s\t%s\n\n" "$1" "$2" "$3"
 }
-
+# Prints out Help documentation
 Help_Func(){
 printf "\t%s\n\n" "This script can generate Video-Stripe-Preview image of a Video/Image-Sequences"
 printf "\tUsage : \v video-stripe-preview [Flag Input]...\n\n\n"
@@ -59,7 +88,7 @@ Flag_Disc "-c/--column"        "No of Columns" "This flag will take <Intiger>Inp
 Flag_Disc "-r/--row"           "No of Rows"    "This flag will take <Intiger>Input of number of rows of tiles in the final preview Minimum Value = 1"
 
 }
-
+# Emergency Exit incase sanity check fails for input name variable.
 Emg_Exit(){
 	printf "\n\n\tSanity Check Failed !!!\n\
 			\n\tPlease make sure that the File name only contains these charectors:\n\
@@ -78,19 +107,19 @@ Emg_Exit(){
 			"[SPACE]"
 	exit 2
 }
-
+# Build a Error-List by appending one error after another to the variable L_Error_List.
 Cache_Error(){
-L_Error_List="$L_Error_List$(printf "$1")\n\n"
+L_Error_List="$L_Error_List$(printf '%s' "$1")\n\n"
 }
-
+# Build a Report-List by appending one report after another to the Variable L_Report_List.
 Cache_Report(){
 	if [[ $2 != "-fs" ]];then
-		L_Report_List="$L_Report_List\t-------\n$(printf "$1")\n"
+		L_Report_List="$L_Report_List$(printf '\n\t-------\n%s' "$1")"
 	else
-		L_Report_List="$(printf "$1")\n\n$L_Report_List"
+		L_Report_List="$(printf '%s' "$1")\n\n$L_Report_List"
 	fi
 }
-
+# Backup existing log files if any exists to 0000ffmpeg_error.log , 0001ffmpeg_error.log , ...
 Backup_Exist_Log(){
 	if [[ -e $V_ffmpeg_log_output || -L $V_ffmpeg_log_output ]];then
 		i=0
@@ -100,9 +129,9 @@ Backup_Exist_Log(){
 		mv $V_ffmpeg_log_output "$(printf "%04d" $i)-$V_ffmpeg_log_output"
 	fi
 }
-
+# Returns Value for a Key from data_prop variable
 get_value() {
-    local key=${1} # get the Input Key=Value pairs
+    local key=${1} # get the Input Key for Key=Value pairs
 	local value=""
     key=${key//./'\.'} # Format dots to escape-dots for "sed" command in next line
     value=$(sed -n "/^$key=/{s///;p}" <<<"$data_prop")
@@ -111,9 +140,9 @@ get_value() {
         printf "%s\n" "No ffprobe value for '$key'" >&2
         return 1
     }
-    printf "$value"
+    printf '%s' "$value"
 }
-
+# Uses ffprobe to get all video properties about the Input and stores in variable data_prop as Key=Value pairs
 probe() {
     local input=$1
     local ffprobe_opts=(
@@ -143,7 +172,7 @@ while [[ $# -gt 0 ]]; do
             if [[ -f "$2" && -z $V_INPUT ]];then # Check if Input Variable is Empty and Input File is Regular File 
 				V_INPUT=$2
 				if [[ $V_INPUT =~ ^[-0-9A-Za-z:\ \_\.\/\(\)]+$ ]];then
-				Cache_Report "\tSanitization check complete for the Input File"
+				Cache_Report "$(printf '\tSanitization check complete for the Input File')"
 				else
 				Emg_Exit
 				fi
@@ -151,20 +180,20 @@ while [[ $# -gt 0 ]]; do
 					probe "$2" # First "probe" to get and store data about file
 					VID_CHK=$(get_value $C_FRAMES_KEY) # Get Frames value from the stored data
 					if [[ $VID_CHK -gt 1 ]];then # Proceed if Input File and Input Vaiable is OK
-						Cache_Report "\tInput file = '$(basename "$2")'\n\tThe Input file is a valid video file\n"
-						Cache_Report "\tFile Location = \"$(readlink -f "$2")\"\n"
+						Cache_Report "$(printf '\tInput file = "%s"\n\tThe Input file is a valid video file\n' "$(basename "$2")")"
+						Cache_Report "$(printf '\tFile Location = "%s"\n' "$(readlink -f "$2")")"
 					elif [[ $VID_CHK -eq 1 ]];then # Cache Error if Input File is a Image File
-						Cache_Error "\n\t Input file = $2\n\tError  :  The Input file is a image file with single frame\n\n"
+						Cache_Error "$(printf '\n\t Input file = %s\n\tError  :  The Input file is a image file with single frame\n\n' "$2")"
 					else # Ceche Error if Input File is of Unknown Data
-						Cache_Error "\n\t Input file = $2\n\tError  :  Input file is of unknown Data/Format\n\n"
+						Cache_Error "$(printf '\n\t Input file = %s\n\tError  :  Input file is of unknown Data/Format\n\n' "$2")"
 					fi
 				else # Cache Error if Input File is a Empty File
-					Cache_Error "\n\t Input file = $2\n\tError  :  The Input File is empty file\n\n"
+					Cache_Error "$(printf '\n\t Input file = %s\n\tError  :  The Input File is empty file\n\n' "$2")"
 				fi
-			elif [[ ! -z $V_INPUT ]];then # Cache Error if trying to Provide multiple Input File
-				Cache_Error "\n\t Input file = $2\n\tError  :  The Input File already provided \n\n"
+			elif [[ -n $V_INPUT ]];then # Cache Error if trying to Provide multiple Input File
+				Cache_Error "$(printf '\n\t Input file = %s\n\tError  :  The Input File already provided \n\n' "$2")"
 			else  # Cache Error if Input File in not a Regular File
-				Cache_Error "\n\t Input file = $2\n\tError  :  The Input File is not a regular file\n\n"
+				Cache_Error "$(printf '\n\t Input file = %s\n\tError  :  The Input File is not a regular file\n\n' "$2")"
 				V_INPUT="--Irregular File-- $2"
 			fi
 			shift 2
@@ -177,39 +206,39 @@ while [[ $# -gt 0 ]]; do
 
 		-el|--error_log) # Make FFmpeg to be more verbos
 			V_ffmpeg_log_flag="-loglevel error -v 99"
-			Cache_Report "\n\tFFmpeg will show all stderr\n\n"
+			Cache_Report "$(printf '\n\tFFmpeg will show all stderr\n\n')"
 			shift 1
 			;;
 
 		-ew|--error_write) # Write FFmpeg output to file
 			V_REDIR="2>>$V_ffmpeg_log_output"
-			Cache_Report "\n\tWritting FFmpeg Error log to : $V_ffmpeg_log_output\n\n"
-			Backup_Exist_Log # Backup existing log files if any exists to 0000ffmpeg_error.log , 0001ffmpeg_error.log , ...
+			Cache_Report "$(printf '\n\tWritting FFmpeg Error log to : %s\n\n' "$V_ffmpeg_log_output")"
+			Backup_Exist_Log
 			shift 1
 			;;
 
 		-dr|--dry_run) # Run FFmpeg wihout output
 			B_dry_run="true"
-			Cache_Report "\n\tThis is Dry-Run\n\n" "-fs"
+			Cache_Report "$(printf '\n\tThis is Dry-Run\n\n')" "-fs"
 			shift 1
 			;;
 
 		-sr|--safe_run) # Quit before running the final FFmpeg
 			B_safe_run="true"
-			Cache_Report "\n\tThis is Safe-Run\n\n" "-fs"
+			Cache_Report "$(printf '\n\tThis is Safe-Run\n\n')" "-fs"
 			shift 1
 			;;
 		-q|--quiet)
 			B_quiet="true" # Wont print the report
-			Cache_Report "\n\tThis is a Quiet-Report\n\n"
+			Cache_Report "$(printf '\n\tThis is a Quiet-Report\n\n')"
 			shift 1
 			;;
 
 		-l|--length)
 			if [[ "$2" =~ [-]{0,1}[^0-9^-]+ ]];then
-				Cache_Error "\tLength = $2 is not a Number\n"
+				Cache_Error "$(printf '\tLength = %s is not a Number\n' "$2")"
 			elif [[ $2 -lt 540 ]];then # Cache Error if Length Less that 540 pixels
-				Cache_Error "\n\t Length = $2\n\tError  :  Minimum Length is 540 \n"
+				Cache_Error "$(printf '\n\t Length = %s\n\tError  :  Minimum Length is 540 \n' "$2")"
 			else
 				V_LENGTH=$2
 			fi
@@ -218,9 +247,9 @@ while [[ $# -gt 0 ]]; do
 
 		-b|--border)
 			if [[ "$2" =~ [-]{0,1}[^0-9^-]+ ]];then
-				Cache_Error "\tBorder = $2\n\tError  :  not a Number\n"
+				Cache_Error "$(printf '\tBorder = %s\n\tError  :  not a Number\n' "$2")"
 			elif [[ $2 -lt 0 ]];then # Cache Error if Border is Negative
-				Cache_Error "\n\t Border = $2\n\tError  :  Border Minimum Length is 0 \n"
+				Cache_Error "$(printf '\n\t Border = %s\n\tError  :  Border Minimum Length is 0 \n' "$2")"
 			else
 				V_BORDER=$2
 			fi
@@ -229,9 +258,9 @@ while [[ $# -gt 0 ]]; do
 
 		-p|--padding)
 			if [[ "$2" =~ [-]{0,1}[^0-9^-]+ ]];then
-				Cache_Error "\tPadding = $2\n\tError  :  not a Number\n"
+				Cache_Error "$(printf '\tPadding = %s\n\tError  :  not a Number\n' "$2")"
 			elif [[ $2 -lt 0 ]];then # Cache Error if Padding is Negative
-				Cache_Error "\n\t Padding = $2\n\tError  :  Padding Minimum Length is 0 \n"
+				Cache_Error "$(printf '\n\t Padding = %s\n\tError  :  Padding Minimum Length is 0 \n' "$2")"
 			else
 				V_PADDING=$2
 			fi
@@ -240,9 +269,9 @@ while [[ $# -gt 0 ]]; do
 
 		-r|--row)
 			if [[ "$2" =~ [-]{0,1}[^0-9^-]+ ]];then
-				Cache_Error "\tRow = $2\n\tError  :  not a Number\n"
+				Cache_Error "$(printf '\tRow = %s\n\tError  :  not a Number\n' "$2")"
 			elif [[ $2 -lt 1 ]];then # Cache Error if Row Less that 1
-				Cache_Error "\n\t Row = $2\n\tError  :  Minimum Row is 1 \n"
+				Cache_Error "$(printf '\n\t Row = %s\n\tError  :  Minimum Row is 1 \n' "$2")"
 			else
 				V_ROW=$2
 			fi
@@ -251,9 +280,9 @@ while [[ $# -gt 0 ]]; do
 
 		-c|--column)
 			if [[ "$2" =~ [-]{0,1}[^0-9^-]+ ]];then
-				Cache_Error "\tColumn = $2\n\tError  :  not a Number\n"
+				Cache_Error "$(printf '\tColumn = %s\n\tError  :  not a Number\n' "$2")"
 			elif [[ $2 -lt 1 ]];then # Cache Error if Column Less that 1
-				Cache_Error "\n\t Column = $2\n\tError  :  Minimum Column is 1 \n"
+				Cache_Error "$(printf '\n\t Column = %s\n\tError  :  Minimum Column is 1 \n' "$2")"
 			else
 				V_COLUMN=$2
 			fi
@@ -261,7 +290,7 @@ while [[ $# -gt 0 ]]; do
 			;;
 
         *) # Cache Error if Unknown flag is used
-            Cache_Error "\n\tUnknown option: $1 use the -h / --help Flag to print help Info\n\n"
+            Cache_Error "$(printf '\n\tUnknown option: %s use the -h / --help Flag to print help Info\n\n' "$1")"
             shift 1
             ;;
 
@@ -269,11 +298,11 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [[ -z "$V_INPUT" ]];then # Cache Error if no Input File is provided
-Cache_Error "\n\t Input file = [NULL]\n\tError  :  The Input File is not provided\n\n"
+Cache_Error "$(printf '\n\tInput file = [NULL]\n\tError  :  The Input File is not provided\n\n')"
 fi
 
-if [[ ! -z $L_Error_List ]];then # If error exists then printf Error and Exit 1
-printf "\n\tThe following errors have been detected :\n\n$L_Error_List\n" 1>&2
+if [[ -n $L_Error_List ]];then # If error exists then printf Error and Exit 1
+printf '\n\tThe following errors have been detected :\n\n%s\n' "$L_Error_List" 1>&2
 exit 1
 fi
 ####!JOB
@@ -281,17 +310,17 @@ fi
 
 ####JOB - Generate, Calculate, Assign, Report, Format -> Values, Names, Constants
 # Generate Preview output name
-OUTPUT="Preview_$(echo   "$(basename "$V_INPUT")"|\
-							sed -E "s~(.*\.)[^\.]*$~\1jpg~g")"
-Cache_Report "\tOutput Name = '$OUTPUT'"
-Cache_Report "\tOutput Location = \"$(pwd)/$(basename "$OUTPUT")\""
+OUTPUT="Preview_$(basename "$V_INPUT"|\
+					sed -E "s~(.*\.)[^\.]*$~\1png~g")"
+Cache_Report "$(printf '\tOutput Name = %s' "$OUTPUT")"
+Cache_Report "$(printf '\tOutput Location = "%s"' "$(pwd)/$(basename "$OUTPUT")")"
 
 # Generate Title for input
 TITLE="$(basename "$V_INPUT")"
-Cache_Report "\tTitle = $TITLE"
+Cache_Report "$(printf '\tTitle = %s' "$TITLE")"
 
 # Sanatize title before using in ffmpeg
-TITLE_SAN=$(echo $TITLE|\
+TITLE_SAN=$(printf '%s' "$TITLE"|\
 			sed -E 's~[^a-z^A-Z^0-9^\.^ ^\-^_]~~g')
 
 # Reverse Calculate the size of each small tile using the final preview Length, Border Size, Padding Size -Default Values or once provided by user
@@ -302,25 +331,25 @@ V_SIZE=$((
 		(V_COLUMN - 1) * V_PADDING
 		)
 		) / V_COLUMN
-	))
-Cache_Report "\tReverse Calculated Size = $V_SIZE"
+		))
+Cache_Report "$(printf '\tReverse Calculated Size = %s' "$V_SIZE")"
 
 # Caclulate the total number of previews
 TOTAL_PREV=$((V_COLUMN * V_ROW))
-Cache_Report "\tPreview image count = $TOTAL_PREV"
+Cache_Report "$(printf '\tPreview image count = %s' "$TOTAL_PREV")"
 
 # Get the total Number of frames
 Tot_Frames="$(get_value $C_FRAMES_KEY)"
-Cache_Report "\tTotal no. of frames = $Tot_Frames"
+Cache_Report "$(printf '\tTotal no. of frames = %s' "$Tot_Frames")"
 
 # Get the encoding of the Video
 Encoding="$(get_value $C_ENCODING_KEY)"
-Cache_Report "\tInput File Encoding = $Encoding"
+Cache_Report "$(printf '\tInput File Encoding = %s' "$Encoding")"
 
 # Get the Duration of the Video
 Duration="$(get_value $C_DURATION_KEY)"
 Duration=${Duration%.*}
-Cache_Report "\tVideo Duration = $Duration s"
+Cache_Report "$(printf '\tVideo Duration = %s s' "$Duration")"
 
 # Calculate Formatted Time using Duration
 HRS=$(( ($Duration / 3600) % 24))
@@ -334,41 +363,41 @@ Duration_F=$(printf "%02d\:%02d\:%02d"\
 # Format Duration to Report Cache
 Time_F=$(printf "%02d:%02d:%02d"\
 			"$HRS" "$MNS" "$SEC")
-Cache_Report "\tFormatted Video Duration = $Time_F\n"
+Cache_Report "$(printf '\tFormatted Video Duration = %s\n' "$Time_F")"
 
 # Get FPS from the video
 FPS="$(get_value $C_FPS_KEY)"
 FPS=$(($FPS))
 
-Cache_Report "\tVideo FPS = $FPS"
+Cache_Report "$(printf '\tVideo FPS = %s' "$FPS")"
 
 # Calculate the the Frames to SKIP by deviding the no. of frames by no. of tiles
 SKIP=$((Tot_Frames / TOTAL_PREV))
 if [[ $SKIP -eq 0 ]];then # Check if SKIP is 0 if total Frames is less than total Preview if true force it to 1
 SKIP=1
 fi
-Cache_Report "\tFrame Gap = $SKIP"
+Cache_Report "$(printf '\tFrame Gap = %s' "$SKIP")"
 
 # Get the Frame width of video
 W_Frame="$(get_value $C_WIDTH_KEY)"
-Cache_Report "\twidth of video = $W_Frame"
+Cache_Report "$(printf '\twidth of video = %s' "$W_Frame")"
 
 # Get the Frame Height of video
 H_Frame="$(get_value $C_HEIGHT_KEY)"
-Cache_Report "\theight of video = $H_Frame"
+Cache_Report "$(printf '\theight of video = %s' "$H_Frame")"
 
 # Setup Time format to timestamp each preview image before ffmpeg tiling
 TIME="%{eif\:t/3600\:d\:2}\:%{eif\:mod(t/60\,60)\:d\:2}\:%{eif\:mod(t\,60)\:d\:2}\.%{eif\:100*mod(t\,1)\:d\:2}"
 
 # Dinamically calculate timestamp font size for portraight and landscape videos
 TIME_FONT_SIZE=$((
-				( W_Frame > H_Frame ? W_Frame : H_Frame )/640 * 48
+				(( W_Frame > H_Frame ? W_Frame : H_Frame )/640) * 48
 				))
-Cache_Report "\tFrame time font size = $TIME_FONT_SIZE"
+Cache_Report "$(printf '\tFrame time font size = %s' "$TIME_FONT_SIZE")"
 
 # Set the timestamp font properties for the timestamp in each tile
 FONT_PROP=":fontcolor=white:fontsize=$TIME_FONT_SIZE"
-Cache_Report "\tFont properties = $FONT_PROP"
+Cache_Report "$(printf '\tFont properties = %s' "$FONT_PROP")"
 
 # Set the timestamp Background box properties
 BOX_PROP=":box=1:boxcolor=black@0.5:boxborderw=5"
@@ -386,18 +415,18 @@ FINAL_HEIGHT=$((
 			($V_COLUMN - 1) * $V_PADDING +
 			$V_BORDER * 2
 			))
-Cache_Report "\tFinal Sample image width = $FINAL_WIDTH"
+Cache_Report "$(printf '\tFinal Sample image width = %s' "$FINAL_WIDTH")"
 
 # Dinamically Calculate the title font size for portraight and landscape final Preview image
 TIT_FONT_SIZE=$((
 				(
-				( W_Frame > H_Frame ? W_Frame : H_Frame )/
-				( W_Frame < H_Frame ? W_Frame : H_Frame )
+				(( FINAL_WIDTH > FINAL_HEIGHT ? FINAL_WIDTH : FINAL_HEIGHT )/
+				( FINAL_WIDTH < FINAL_HEIGHT ? FINAL_WIDTH : FINAL_HEIGHT ))
 				*$FINAL_WIDTH
 				)
-				/30
+				/35
 				))
-Cache_Report "\tTitle Sample Font size = $TIT_FONT_SIZE"
+Cache_Report "$(printf '\tTitle Sample Font size = %s' "$TIT_FONT_SIZE")"
 
 # Setup Title font properties
 TIT_FONT_PROP=":fontcolor=white:fontsize=$TIT_FONT_SIZE"
@@ -408,9 +437,9 @@ TIT_BOX_PROP=":box=1:boxcolor=black@0.5:boxborderw=5"
 # Calculate the amount of space to be padded of video metadata like title dimention fps encoding duration 
 TITLE_SPACE=$((
 				(
-				( FINAL_WIDTH > FINAL_HEIGHT ? FINAL_WIDTH : FINAL_HEIGHT )/
-				( FINAL_WIDTH < FINAL_HEIGHT ? FINAL_WIDTH : FINAL_HEIGHT )*
-				$FINAL_WIDTH
+				(( FINAL_WIDTH > FINAL_HEIGHT ? FINAL_WIDTH : FINAL_HEIGHT )/
+				( FINAL_WIDTH < FINAL_HEIGHT ? FINAL_WIDTH : FINAL_HEIGHT ))
+				*$FINAL_WIDTH
 				)/ 5
 			))
 ####!JOB
@@ -423,11 +452,11 @@ fi
 
 # Disable Printing Report if Quiet is enabled
 if [[ $B_quiet != "true" ]];then
-printf "\nThe Process Report :\n\n$L_Report_List\n\n"
+printf '\nThe Process Report :\n\n%s\n\n' "$L_Report_List"
 fi
 
 if [[ $V_REDIR != '2>&1' ]];then
-printf "\nThe Process Report :\n\n$L_Report_List\n">$V_ffmpeg_log_output
+printf '\nThe Process Report :\n\n%s\n' "$L_Report_List">$V_ffmpeg_log_output
 fi
 
 # Exit with 0 if  Safe Run is enables
