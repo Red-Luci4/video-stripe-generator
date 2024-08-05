@@ -171,7 +171,7 @@ while [[ $# -gt 0 ]]; do
         -vf|--video_file)
             if [[ -f "$2" && -z $V_INPUT ]];then # Check if Input Variable is Empty and Input File is Regular File 
 				V_INPUT=$2
-				if [[ $V_INPUT =~ ^[-0-9A-Za-z:\ \_\.\/\(\)]+$ ]];then
+				if [[ $V_INPUT =~ ^[-0-9A-Za-z:\ \_\.\/\(\)\']+$ ]];then
 				Cache_Report "$(printf '\tSanitization check complete for the Input File')"
 				else
 				Emg_Exit
@@ -321,7 +321,9 @@ Cache_Report "$(printf '\tTitle = %s' "$TITLE")"
 
 # Sanatize title before using in ffmpeg
 TITLE_SAN=$(printf '%s' "$TITLE"|\
-			sed -E 's~[^a-z^A-Z^0-9^\.^ ^\-^_]~~g')
+			sed -E 's~[^a-z^A-Z^0-9^\.^ ^\-^_]~~g'|fold -s -w 55)
+TITLE_NL_CNT=$(( $(echo "$TITLE_SAN"|wc -l)-1 ))
+echo "This is Number of lines in title : $TITLE_NL_CNT"
 
 # Reverse Calculate the size of each small tile using the final preview Length, Border Size, Padding Size -Default Values or once provided by user
 V_SIZE=$((
@@ -464,15 +466,19 @@ if [[ $B_safe_run == "true" ]];then
 exit 0
 fi
 
+DIM_POS=$(echo "20+$TIT_FONT_SIZE*((1+$TITLE_NL_CNT)*1.5)"|bc )
+ENC_POS=$(echo "20+$TIT_FONT_SIZE*((2+$TITLE_NL_CNT)*1.5)"|bc )
+DUR_POS=$(echo "20+$TIT_FONT_SIZE*((3+$TITLE_NL_CNT)*1.5)"|bc )
+
 ####ANCHOR - Final FFmpeg step
-eval "ffmpeg -hide_banner $V_ffmpeg_log_flag -i \"$V_INPUT\" -y -vframes 1 -q:v 2 -vf \
+eval "ffmpeg -v quiet -hide_banner $V_ffmpeg_log_flag -i \"$V_INPUT\" -y -vframes 1 -q:v 2 -vf \
 	\"select=not(mod(n\\,$SKIP)),\
 	drawtext=fontfile=$V_FONT:text='$TIME'$FONT_PROP$BOX_PROP:x=($W_Frame-text_w)-10:y=($H_Frame-text_h)-10,\
 	scale=$V_SIZE:-1,\
 	tile=${V_COLUMN}x${V_ROW}:padding=$V_PADDING:margin=$V_BORDER:color=Black,\
-	pad=width=2+iw:height=2+ih+$TITLE_SPACE:x=1:y=1+$TITLE_SPACE:color=black,\
+	pad=width=2+iw:height=2+ih+50+$DUR_POS:x=1:y=1+50+$DUR_POS:color=black,\
 	drawtext=fontfile=$V_FONT:text='Title - ${TITLE_SAN}'$TIT_FONT_PROP$TIT_BOX_PROP:x=20:y=20,\
-	drawtext=fontfile=$V_FONT:text='Dimentions - ${H_Frame} x ${W_Frame} | FPS - ${FPS}'$TIT_FONT_PROP$TIT_BOX_PROP:x=20:y=20+$TIT_FONT_SIZE*1.5,\
-	drawtext=fontfile=$V_FONT:text='Encoding - ${Encoding}'$TIT_FONT_PROP$TIT_BOX_PROP:x=20:y=20+$TIT_FONT_SIZE*3,\
-	drawtext=fontfile=$V_FONT:text='Duration - ${Duration_F}'$TIT_FONT_PROP$TIT_BOX_PROP:x=20:y=20+$TIT_FONT_SIZE*4.5\"\
+	drawtext=fontfile=$V_FONT:text='Dimentions - ${H_Frame} x ${W_Frame} | FPS - ${FPS}'$TIT_FONT_PROP$TIT_BOX_PROP:x=20:y=$DIM_POS,\
+	drawtext=fontfile=$V_FONT:text='Encoding - ${Encoding}'$TIT_FONT_PROP$TIT_BOX_PROP:x=20:y=$ENC_POS,\
+	drawtext=fontfile=$V_FONT:text='Duration - ${Duration_F}'$TIT_FONT_PROP$TIT_BOX_PROP:x=20:y=$DUR_POS\"\
 	-f $V_FORMAT \"$OUTPUT\" $V_REDIR"
